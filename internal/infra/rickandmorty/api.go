@@ -3,7 +3,9 @@ package rickandmorty
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 
 	"github.com/abraaoan/go-rickandmorty-clean-arch/internal/entity"
 )
@@ -11,25 +13,43 @@ import (
 type APIClient struct {
 	baseURL string
 	client  *http.Client
+	cache   *URLCache
 }
 
 func NewApiClient() *APIClient {
 	return &APIClient{
 		baseURL: "https://rickandmortyapi.com/api",
 		client:  &http.Client{},
+		cache:   NewURLCache(5 * time.Minute),
 	}
+}
+
+func (api *APIClient) getJsonWithCache(url string, dest any) error {
+	if data, ok := api.cache.Get(url); ok {
+		return json.Unmarshal(data, dest)
+	}
+
+	resp, err := api.client.Get(url)
+	if err != nil {
+		return fmt.Errorf("http error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("read error: %w", err)
+	}
+
+	api.cache.Set(url, body)
+	return json.Unmarshal(body, dest)
 }
 
 func (api *APIClient) GetCharacter(id int) (*entity.Character, error) {
 	url := fmt.Sprintf("%s/character/%d", api.baseURL, id)
-	resp, err := api.client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	var character entity.Character
-	if err := json.NewDecoder(resp.Body).Decode(&character); err != nil {
+	err := api.getJsonWithCache(url, &character)
+	if err != nil {
 		return nil, err
 	}
 
@@ -38,14 +58,9 @@ func (api *APIClient) GetCharacter(id int) (*entity.Character, error) {
 
 func (api *APIClient) GetCharacters(page int) (*entity.CharacterList, error) {
 	url := fmt.Sprintf("%s/character?page=%d", api.baseURL, page)
-	resp, err := api.client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var characters entity.CharacterList
-	if err := json.NewDecoder(resp.Body).Decode(&characters); err != nil {
+	err := api.getJsonWithCache(url, &characters)
+	if err != nil {
 		return nil, err
 	}
 
@@ -54,14 +69,9 @@ func (api *APIClient) GetCharacters(page int) (*entity.CharacterList, error) {
 
 func (api *APIClient) GetLocation(id int) (*entity.Location, error) {
 	url := fmt.Sprintf("%s/location/%d", api.baseURL, id)
-	resp, err := api.client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var location entity.Location
-	if err := json.NewDecoder(resp.Body).Decode(&location); err != nil {
+	err := api.getJsonWithCache(url, &location)
+	if err != nil {
 		return nil, err
 	}
 	return &location, nil
@@ -69,14 +79,9 @@ func (api *APIClient) GetLocation(id int) (*entity.Location, error) {
 
 func (api *APIClient) GetLocations() (*entity.LocationList, error) {
 	url := fmt.Sprintf("%s/location", api.baseURL)
-	resp, err := api.client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var locations entity.LocationList
-	if err := json.NewDecoder(resp.Body).Decode(&locations); err != nil {
+	err := api.getJsonWithCache(url, &locations)
+	if err != nil {
 		return nil, err
 	}
 	return &locations, nil
@@ -84,14 +89,9 @@ func (api *APIClient) GetLocations() (*entity.LocationList, error) {
 
 func (api *APIClient) GetEpisode(id int) (*entity.Episode, error) {
 	url := fmt.Sprintf("%s/episode/%d", api.baseURL, id)
-	resp, err := api.client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var episode entity.Episode
-	if err := json.NewDecoder(resp.Body).Decode(&episode); err != nil {
+	err := api.getJsonWithCache(url, &episode)
+	if err != nil {
 		return nil, err
 	}
 	return &episode, nil
@@ -99,14 +99,10 @@ func (api *APIClient) GetEpisode(id int) (*entity.Episode, error) {
 
 func (api *APIClient) GetEpisodes() (*entity.EpisodeList, error) {
 	url := fmt.Sprintf("%s/episode", api.baseURL)
-	resp, err := api.client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
 
 	var episodes entity.EpisodeList
-	if err := json.NewDecoder(resp.Body).Decode(&episodes); err != nil {
+	err := api.getJsonWithCache(url, &episodes)
+	if err != nil {
 		return nil, err
 	}
 
