@@ -20,7 +20,7 @@ func NewApiClient() *APIClient {
 	return &APIClient{
 		baseURL: "https://rickandmortyapi.com/api",
 		client:  &http.Client{},
-		cache:   NewURLCache(5 * time.Minute),
+		cache:   NewURLCache(10 * time.Second),
 	}
 }
 
