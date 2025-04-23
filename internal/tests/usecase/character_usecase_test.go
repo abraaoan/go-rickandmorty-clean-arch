@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetCharacter_Success(t *testing.T) {
-	mockRepo := &mocks.CharacterRepositoryMock{
+	mockRepo := &mocks.CharacterUseCaseMock{
 		GetCharacterFn: func(id int) (*entity.Character, error) {
 			return &entity.Character{
 				ID:      id,
@@ -30,7 +30,7 @@ func TestGetCharacter_Success(t *testing.T) {
 }
 
 func TestGetCharacter_InvalidID(t *testing.T) {
-	mockRepo := &mocks.CharacterRepositoryMock{
+	mockRepo := &mocks.CharacterUseCaseMock{
 		GetCharacterFn: func(id int) (*entity.Character, error) {
 			return nil, errors.New("Invalid ID")
 		},
@@ -44,7 +44,7 @@ func TestGetCharacter_InvalidID(t *testing.T) {
 }
 
 func TestGetCharacteres_InvalidPage(t *testing.T) {
-	mockRepo := &mocks.CharacterRepositoryMock{
+	mockRepo := &mocks.CharacterUseCaseMock{
 		GetCharactersFn: func(page int) (*entity.CharacterList, error) {
 			return nil, errors.New("invalid page")
 		},
