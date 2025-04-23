@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/abraaoan/go-rickandmorty-clean-arch/internal/entity"
 )
@@ -16,11 +15,11 @@ type APIClient struct {
 	cache   *URLCache
 }
 
-func NewApiClient() *APIClient {
+func NewApiClient(baseURL string, cache *URLCache) *APIClient {
 	return &APIClient{
-		baseURL: "https://rickandmortyapi.com/api",
+		baseURL: baseURL,
 		client:  &http.Client{},
-		cache:   NewURLCache(10 * time.Second),
+		cache:   cache,
 	}
 }
 

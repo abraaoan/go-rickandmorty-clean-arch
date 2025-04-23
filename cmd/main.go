@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/abraaoan/go-rickandmorty-clean-arch/internal/infra/rickandmorty"
 	"github.com/abraaoan/go-rickandmorty-clean-arch/internal/interface/controller"
@@ -10,7 +11,9 @@ import (
 )
 
 func main() {
-	repo := rickandmorty.NewApiClient()
+	baseUrl := "https://rickandmortyapi.com/api"
+	cache := rickandmorty.NewURLCache(5 * time.Minute)
+	repo := rickandmorty.NewApiClient(baseUrl, cache)
 
 	// Characters
 	characterUseCase := usecase.NewCharacterUseCase(repo)
